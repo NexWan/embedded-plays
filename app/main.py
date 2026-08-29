@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.api.main import api_router
 from app.core.config import settings
+from app.routes.authorization import router as auth_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -14,6 +15,8 @@ app = FastAPI(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+app.include_router(auth_router, prefix="/auth")
 
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
