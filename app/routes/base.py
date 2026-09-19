@@ -7,7 +7,7 @@ from app.models.spotify import SpotifyToken as SpotifyTokenModel
 
 router = APIRouter()
 
-
+# Ideally this should depend on a session cookie or a JWT token
 @router.get("/view")
 async def me(
     uid: str,
@@ -18,7 +18,7 @@ async def me(
         res.status_code = status.HTTP_401_UNAUTHORIZED
         return {"error": "Invalid user ID. Please log in again."}
 
-    return {"message": "You are logged in."}
+    return {"message": "You are logged in.", "details": {"uid": uid}}
 
 
 async def _is_valid_uid(uid: str, db: AsyncSession) -> bool:

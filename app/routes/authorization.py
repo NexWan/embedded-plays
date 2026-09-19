@@ -54,13 +54,16 @@ async def callback(code: str, state: str, res: Response, db: AsyncSession = Depe
 
         token_data = response.json()
 
+        # If request is succesful, then fetch profile to load up the user id
+        profile_info = await profile(token_data["access_token"], res)
+
         spotify = SpotifyTokenModel(
             access_token=token_data["access_token"],
             refresh_token=token_data["refresh_token"],
             token_type=token_data["token_type"],
             expires_in=token_data["expires_in"],
             scope=token_data["scope"],
-            user_id=str(uuid.uuid4())
+            user_id=profile_info["id"]
         )
         db.add(spotify)
         await db.commit()
@@ -69,6 +72,18 @@ async def callback(code: str, state: str, res: Response, db: AsyncSession = Depe
         return RedirectResponse(
             url="/me/view?uid=" + str(spotify.user_id)
         )
-    
 
+# Fetch spotify profile information for the user
+async def profile(token: str, res: Response):
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://api.spotify.com/v1/me", headers=headers)
+        if response.status_code != 200:
+            res.status_code = status.HTTP_400_BAD_REQUEST
+            return {"error": "Failed to retrieve profile information from Spotify."}
+
+        return response.json()
 
